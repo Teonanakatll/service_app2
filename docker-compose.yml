@@ -1,8 +1,10 @@
 # docker-compose build, docker-compose run
 
 # создание самого джанго приложения в папке WORKDIR /service
-# docker-compose run --rm sh -c "django-admin startproject service ."
+# docker-compose run --rm web-app sh -c "django-admin startproject service ."
 # --rm — после выполнения команды контейнер будет удалён (чтобы не оставался "мусор")
+# docker-compose run --rm web-app sh -c "python manage.py migrate"
+# docker-compose run --rm web-app sh -c "python manage.py shell_plus --ipython"
 
 services:
   # web-app: — это имя сервиса. Оно произвольное и обозначает один контейнер
@@ -22,9 +24,30 @@ services:
       # монтирование тома между хостом и контейнером позволяет синхронизировать файлы между хостом и контейнером во время его работы
       # подключаем локальную папку к контейнеру
       - ./service:/service
+
+    environment:
+      - DB_HOST=database   # ссылка на другой сервис docker-compose с бд
+      - DB_NAME=dbname
+      - DB_USER=dbuser
+      - DB_PASS=pass
+
     # sh -c: Это команда для запуска шелл-скрипта. sh — это командный интерпретатор (shell), а -c — параметр, который
     # позволяет передать строку команд для выполнения. То есть, здесь мы передаем команду для выполнения, как строку.
     # 0.0.0.0 — это привязка сервера ко всем доступным сетевым интерфейсам, что позволяет подключаться к
     # серверу не только изнутри контейнера, но и извне.
     command: >
       sh -c "python manage.py runserver 0.0.0.0:8000"
+
+    # указываем что этот сервис не должен быть запущен раньше чем сервис с дб
+    depends_on:
+      - database
+
+  database:
+    # берём официальный image postgresql из docker-hub на минифицированном линуксе
+    image: postgres:14.6-alpine
+    environment:
+      # Эти переменные окружения используются для автоматической настройки базы данных при старте контейнера PostgreSQL.
+      # Они задают начальную конфигурацию базы данных и позволяют другим сервисам подключаться к базе, используя эти учетные данные.
+      - POSTGRES_DB=dbname
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=pass

@@ -14,6 +14,9 @@ WORKDIR /service
 # docker run -p 8000:8000 my_image
 EXPOSE 8000
 
+# ПАКЕТЫ КОТОРЫЕ НЕОБХОДИМО ПОДКЛЮЧИТЬ ЧТОБЫ МЫ МОГЛИ ПОДКЛЮЧАТЬСЯ К Postgresql
+RUN apk add postgresql-client build-base postgresql-dev
+
 RUN pip install -r /temp/requirements.txt
 # запускает приложение внутри контейнера, юзер только для запуска процессов в контейнере с пониженными привилегиями
 # в ситеме получается просто нет пользователя с рут правами поэтому и нет уязвимостей связанных с root доступом
