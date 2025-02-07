@@ -3,6 +3,7 @@ djangorestframework==3.14.0
 psycopg2==2.8.6
 
 # dev пакеты
+django-debug-toolbar
 django-extensions
 rich
 ipython
