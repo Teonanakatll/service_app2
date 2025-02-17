@@ -1,0 +1,120 @@
+# docker-compose build, docker-compose run, docker-compose up
+
+# создание самого джанго приложения в папке WORKDIR /service
+# docker-compose run --rm web-app sh -c "django-admin startproject service ."
+# --rm — после выполнения команды контейнер будет удалён (чтобы не оставался "мусор")
+# docker-compose run --rm web-app sh -c "python manage.py migrate"
+# docker-compose run --rm web-app sh -c "python manage.py shell_plus --ipython"
+
+# удаляет все none образы
+# FOR /F "tokens=*" %i IN ('docker images -q --filter "dangling=true"') DO docker rmi %i
+
+services:
+  # web-app: — это имя сервиса. Оно произвольное и обозначает один контейнер
+  # (или группу одинаковых контейнеров), который будет запущен в составе проекта
+  web-app:
+    build:
+      # context — это путь к директории, который будет использоваться Docker для поиска всех необходимых файлов, таких
+      # как Dockerfile, исходный код приложения, зависимости и любые другие файлы, которые могут понадобиться в процессе сборки контейнера
+      # Если в контексте сборки будет много ненужных файлов (например, .git или другие большие папки), можно
+      # использовать файл .dockerignore, чтобы исключить ненужные файлы из контекста сборки.
+      context: .
+    ports:
+      # Первое число — это порт на хост-машине ( на компьютере или сервере), через который взаимодействовать
+      # с контейнером. Второе число (8000) — это порт внутри контейнера, на котором приложение будет слушать запросы.
+      - "8000:8000"
+    volumes:
+      # монтирование тома между хостом и контейнером позволяет синхронизировать файлы между хостом и контейнером во время его работы
+      # подключаем локальную папку к контейнеру, Это означает, что любые изменения в локальной папке моментально отражаются в контейнере
+      - ./service:/service
+
+    environment:
+      - DB_HOST=database   # ссылка на другой сервис docker-compose с бд
+      - DB_NAME=dbname
+      - DB_USER=dbuser
+      - DB_PASS=pass
+
+    # sh -c: Это команда для запуска шелл-скрипта. sh — это командный интерпретатор (shell), а -c — параметр, который
+    # позволяет передать строку команд для выполнения. То есть, здесь мы передаем команду для выполнения, как строку.
+    # 0.0.0.0 — это привязка сервера ко всем доступным сетевым интерфейсам, что позволяет подключаться к
+    # серверу не только изнутри контейнера, но и извне.
+    command: >
+      sh -c "python manage.py runserver 0.0.0.0:8000"
+
+    # указываем что этот сервис не должен быть запущен раньше чем сервис с дб
+    depends_on:
+      - database
+
+  database:
+    # берём официальный image postgresql из docker-hub на минифицированном линуксе
+    image: postgres:14.6-alpine
+    environment:
+      # Эти переменные окружения используются для автоматической настройки базы данных при старте контейнера PostgreSQL.
+      # Они задают начальную конфигурацию базы данных и позволяют другим сервисам подключаться к базе, используя эти учетные данные.
+      - POSTGRES_DB=dbname
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=pass
+
+  redis:
+    image: redis:7.0.5-alpine
+    hostname: redis
+
+  worker:
+    build:
+      # Контекст сборки — текущая директория (.), то есть Dockerfile должен находиться в корневой папке проекта
+      context: .
+    # Контейнеру присваивается имя worker, чтобы другие контейнеры могли обращаться к нему по этому имени.
+    hostname: worker
+    # когда контейнер запускается, по умолчанию внутри него выполняется команда celery
+    # entrypoint определяет основной исполняемый файл контейнера (то, что запустится в первую очередь)
+    # Если entrypoint не указан, то контейнер стартует с командой, прописанной в образе (например, CMD в Dockerfile)
+    entrypoint: celery
+    # Указывает, что после celery будет передаваться команда:
+    # -A celery_app.app — указывает Celery, где искать приложение (модуль celery_app.app).
+    # worker — запускает Celery в режиме воркера (обработчика задач).
+    # --loglevel=info — задаёт уровень логирования (можно поменять на debug, error и т. д.).
+    command: -A celery_app.app worker --loglevel=info
+    volumes:
+      - ./service:/service
+#    links:
+#      - redis
+    environment:
+      - DB_HOST=database   # ссылка на другой сервис docker-compose с бд
+      - DB_NAME=dbname
+      - DB_USER=dbuser
+      - DB_PASS=pass
+    depends_on:
+      - redis
+      - database
+
+  worker2:
+    build:
+      context: .
+    hostname: worker2
+    entrypoint: celery
+    command: -A celery_app.app worker --loglevel=info
+    volumes:
+      - ./service:/service
+    environment:
+      - DB_HOST=database
+      - DB_NAME=dbname
+      - DB_USER=dbuser
+      - DB_PASS=pass
+    depends_on:
+      - redis
+      - database
+
+  flower:
+    build:
+      context: .
+    hostname: flower
+    entrypoint: celery
+    command: -A celery_app.app flower
+    volumes:
+      - ./service:/service
+#    links:
+#      - redis
+    depends_on:
+      - redis
+    ports:
+      - "5555:5555"

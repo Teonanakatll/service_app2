@@ -1,6 +1,9 @@
 from django.core.validators import MaxValueValidator
 from django.db import models
-from . tasks import set_price
+from django.db.models.signals import post_delete
+
+from .signals import delete_cache_total_sum
+from .tasks import set_price, set_comment
 
 # внутри контейнера код запускается относительно service, и там clients находится в корне
 from clients.models import Client
@@ -10,6 +13,14 @@ class Service(models.Model):
     name = models.CharField(max_length=50)
     full_price = models.PositiveIntegerField()
 
+
+    # я кажется неправильно понимал суть инит... ну теперь ясно, модель орм это класс джанго, когда он создаётся он
+    # инициализирует поля и заносит данные полученные из бд затем вызывается метод super().save(*args, **kwargs) и
+    # модель сохраняется с переданными значениями, получается у нас есть время перед сохранением записи чтобы добавить
+    # кастомную логику в __init__ и есть возможность переопределить save() а так же есть сигналы чтобы реализовать
+    # логику перед\после сохранения\удаления... я неправильно понимал метод init я думал что создание подразумевает
+    # само создание записи в бд, а это оказывается создание класса модели и оно происходит и при созд.
+    # записи и при извлечении записи из бд
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # во время создания записи присваиваем значение скидки переменной self.__full_price для того чтобы
@@ -21,7 +32,10 @@ class Service(models.Model):
         # скидку в связанных моделях Subscriptions
         if self.full_price != self.__full_price:
             for subscription in self.subscriptions.all():
+                # Когда вы вызываете delay, задача помещается в очередь, и Celery выполняет её позже, при этом ваш
+                # основной процесс продолжает работу, не ожидая завершения этой задачи
                 set_price.delay(subscription.id)
+                set_comment.delay(subscription.id)
 
         return super().save(*args, **kwargs)
 
@@ -37,8 +51,8 @@ class Plan(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # во время создания записи присваиваем значение скидки переменной self.__discount_percent для того чтобы
-        # отслеживать изменение поля discount_percent и пересчитывать поле price в модели Subscription
+        # во время создания (извлечения из бд) записи присваиваем значение скидки переменной self.__discount_percent для
+        # того чтобы отслеживать изменение поля discount_percent и пересчитывать поле price в модели Subscription
         self.__discount_percent = self.discount_percent
 
     def save(self, *args, **kwargs):
@@ -46,20 +60,33 @@ class Plan(models.Model):
         # скидку в связанных моделях Subscriptions
         if self.discount_percent != self.__discount_percent:
             for subscription in self.subscriptions.all():
+                # Когда вы вызываете delay, задача помещается в очередь, и Celery выполняет её позже, при этом ваш
+                # основной процесс продолжает работу, не ожидая завершения этой задачи
                 set_price.delay(subscription.id)
+                set_comment.delay(subscription.id)
 
         return super().save(*args, **kwargs)
+
+    def get_old_disc(self):
+        return self.__discount_percent
 
 class Subscription(models.Model):
     client = models.ForeignKey(Client, related_name='subscriptions', on_delete=models.PROTECT)
     service = models.ForeignKey(Service, related_name='subscriptions', on_delete=models.PROTECT)
     plan = models.ForeignKey(Plan, related_name='subscriptions', on_delete=models.PROTECT)
     price = models.PositiveSmallIntegerField(default=0)
+    comment = models.CharField(max_length=50, default='')
 
-    # этот вариант неправильный так как пересчёт цены одлжен происходить не в момент сохранения продписки
-    # а в момент изменения цены в модели Service или скидки в модели Plan
-    # def save(self, *args, save_model=True, **kwargs):
-    #     if save_model:
-    #         set_price.delay(self.id)
-    #
-    #     return super().save(*args, **kwargs)
+    def save(self, *args, save_model=True, **kwargs):
+        ''' во время создания новой записи запускаем таск пересчёта цены'''
+
+        # если обьект создаётся то у него нет self.id
+        creating = not bool(self.id)
+        # вызываем метод save класса супер чтобы сохранить обьект (если он создаётся то в этот момент присвоится id)
+        result = super().save(*args, **kwargs)
+        # и в случае если обьект создаётся тогда запускаем таску подсчёта полной стоимости
+        if creating:
+            set_price.delay(self.id)
+
+        return result
+

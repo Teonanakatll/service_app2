@@ -3,9 +3,16 @@ djangorestframework==3.14.0
 psycopg2==2.8.6
 celery[redis]==5.2.7
 flower==1.2.0
+celery_singleton==0.3.1
+
+# поддержка редис в джанго реализованна только с 4 версии поэтому скачиваем дополнительный пакет
+# чтобы использовать редис в джанго 3.2.16
+django-redis==5.2.0
+
 
 # dev пакеты
 django-debug-toolbar
+django-debug-toolbar-force
 django-extensions
 rich
 ipython

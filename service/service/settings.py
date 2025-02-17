@@ -44,10 +44,9 @@ INSTALLED_APPS = [
     'clients.apps.ClientsConfig',
     'services.apps.ServicesConfig',
 
-    # dev пакеты
-    'django_extensions',
-    'debug_toolbar',
 ]
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -58,7 +57,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+
 ]
 
 ROOT_URLCONF = 'service.urls'
@@ -146,10 +145,21 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-INTERNAL_IPS = [
-    '127.0.0.1',
-    'localhost',
-]
+
+if DEBUG:
+    import socket
+    hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+    INTERNAL_IPS = [ip[:-1] + "1" for ip in ips]  # Авто-подстановка IP контейнера
+    # dev пакеты
+    INSTALLED_APPS += ['debug_toolbar', 'django_extensions']
+    # django-debug-toolbar-force, вывести gebug_toolbar на странице с json в конце урла - ?debug-toolbar &debug-toolbar
+    MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware',
+                   'debug_toolbar_force.middleware.ForceDebugToolbarMiddleware']
+
+    SHELL_PLUS_IMPORTS = [
+        "from utils.utils import *"
+    ]
+
 
 
 
@@ -166,4 +176,24 @@ LOGGING = {
     }
 }
 
+
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        # 'rest_framework.renderers.BrowsableAPIRenderer',
+    ]
+}
+
+
 CELERY_BROKER_URL = 'redis://redis:6379/0'
+
+# устанавливаем редис кешем по умолчанию
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://redis:6379/1',
+    }
+}
+# создаём переменную которая будет ключём в кеше
+PRICE_CACHE_NAME = 'price_cache'
+
