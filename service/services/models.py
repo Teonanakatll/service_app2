@@ -75,7 +75,19 @@ class Subscription(models.Model):
     service = models.ForeignKey(Service, related_name='subscriptions', on_delete=models.PROTECT)
     plan = models.ForeignKey(Plan, related_name='subscriptions', on_delete=models.PROTECT)
     price = models.PositiveSmallIntegerField(default=0)
-    comment = models.CharField(max_length=50, default='')
+    # ХЭШ ИНДЕКС, БРИН ИНДЕКС, БИТРИ ИНДЕКС
+    # индексы нужно устанавливать на поля по которым происходит поиск, если поиск происходит по двум
+    # полям следует установить составной индекс
+    comment = models.CharField(max_length=50, default='', db_index=True)
+
+    field_a = models.CharField(max_length=50, default='')
+    field_b = models.CharField(max_length=50, default='')
+
+    class Meta:
+        # индексируем сочетание двух полей. составной индекс,
+        indexes = [
+            models.Index(fields=['field_a', 'field_b'])
+        ]
 
     def save(self, *args, save_model=True, **kwargs):
         ''' во время создания новой записи запускаем таск пересчёта цены'''
@@ -85,8 +97,8 @@ class Subscription(models.Model):
         # вызываем метод save класса супер чтобы сохранить обьект (если он создаётся то в этот момент присвоится id)
         result = super().save(*args, **kwargs)
         # и в случае если обьект создаётся тогда запускаем таску подсчёта полной стоимости
-        if creating:
-            set_price.delay(self.id)
+        # if creating:
+        #     set_price.delay(self.id)
 
         return result
 
