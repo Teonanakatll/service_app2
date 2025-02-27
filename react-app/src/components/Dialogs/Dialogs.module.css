@@ -1,0 +1,121 @@
+.dialogs {
+	display: grid;
+	grid-template-columns: 1.3fr 10fr minmax(50px, 200px);
+	grid-template-rows: 8fr 1fr;
+	grid-template-areas: 
+		"a b c"
+		"a d c";
+	height: 100%;
+	padding-top: 10px;
+	font-size: 20px;
+	color: saddlebrown;
+}
+
+.dialogsItems {
+	height: a;
+	grid-row: span 2;
+	font-weight: bold;
+}
+
+.dialog {
+	height: b;
+	grid-row: 1;
+	margin: 10px 3px;
+	text-align: center;
+	position: relative;
+	font-size: 17px;
+}
+
+.text_area {
+	height: d;
+	background-color: #a04a4a;
+	width: 100%;
+	height: 100%;
+}
+
+.dialog.onlineSection {
+	font-size: 13px;
+	.ava {
+		width: 30px;
+		height: 30px;
+	}
+}
+
+.dialog .active {
+	color: gold;
+	.ava {
+		border-color: #F88500;
+	}
+}
+
+.ava {
+	border-radius: 10rem;
+	width: 50px;
+	height: 50px;
+	object-fit: cover;
+	border: 5px solid #beb9b3;
+	transition: border-color .3s ease-out;
+	display: block;
+	margin: 0 auto;
+	}
+
+.link {
+	color: saddlebrown;
+	transition: color .3s ease-out;
+}
+.link:hover {
+	color: gold;
+	.ava {
+		border-color: #F88500;
+	}
+}
+
+.ind {
+	width: 10px;
+	height: 10px;
+	background-color: #dad4cd;
+	/* background-color: #26f107; */
+	border-radius: 10px;
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	/* сверху - справа - снизу - слева */
+  /* margin:  -20px 0 20px auto; */
+	/* верх - горизанталь - низ */
+	/* margin: 10px 20px 30px */
+}
+
+.ind.online {
+	background-color: #26f107;
+}
+
+.messagesItems {
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	margin-left: 30px;
+}
+
+
+.message {
+	margin: 10px 0;
+	margin-bottom: 40px;
+	border: 2px solid saddlebrown;
+	border-radius: 8px;
+	padding: 10px 10px 20px;
+	background-color: #fff;
+	width: 70%;
+	display: flex;
+}
+.my_message {
+	align-self: end;
+	background-color: #dbf871;
+}
+
+/* .messages {
+	margin: 10px 0;
+} */
+
+/* .messages .message {
+
+} */

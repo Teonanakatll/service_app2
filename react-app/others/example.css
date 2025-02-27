@@ -1,0 +1,22 @@
+
+
+.n {
+	color: #F88500;
+	color: #FFF79A;
+	color: #ff0099;
+	color: #363838;
+	color: #5a5a5a;
+}
+
+/* .dialog.onlineSection — применяется только к элементам, у которых оба класса. */
+.dialog.onlineSection {color: hotpink}
+
+/*  выбирает только те элементы .onlineSection, которые являются непосредственными потомками элементов с классом .dialog */
+.dialog > .onlineSection {color: hotpink}
+
+/* .dialog .onlineSection — применяется к элементам с классом onlineSection, которые являются потомками элементов с классом dialog. */
+.dialog .onlineSection {color: hotpink}
+
+/* .dialog, .onlineSection — применяется ко всем элементам, у которых любой из этих классов. */
+.dialog, .onlineSection {color: hotpink}
+

@@ -65,6 +65,7 @@ class Plan(models.Model):
                 set_price.delay(subscription.id)
                 set_comment.delay(subscription.id)
 
+
         return super().save(*args, **kwargs)
 
     def get_old_disc(self):
@@ -80,8 +81,8 @@ class Subscription(models.Model):
     # полям следует установить составной индекс
     comment = models.CharField(max_length=50, default='', db_index=True)
 
-    field_a = models.CharField(max_length=50, default='')
-    field_b = models.CharField(max_length=50, default='')
+    field_a = models.CharField(max_length=50, blank=True, default='')
+    field_b = models.CharField(max_length=50, blank=True, default='')
 
     class Meta:
         # индексируем сочетание двух полей. составной индекс,
@@ -97,8 +98,8 @@ class Subscription(models.Model):
         # вызываем метод save класса супер чтобы сохранить обьект (если он создаётся то в этот момент присвоится id)
         result = super().save(*args, **kwargs)
         # и в случае если обьект создаётся тогда запускаем таску подсчёта полной стоимости
-        # if creating:
-        #     set_price.delay(self.id)
+        if creating:
+            set_price.delay(self.id)
 
         return result
 

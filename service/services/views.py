@@ -40,3 +40,5 @@ class SubscriptionView(ReadOnlyModelViewSet):
 
         return response
 
+def photo_view(request):
+    return render(request, 'services/photo.html')

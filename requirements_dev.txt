@@ -11,11 +11,3 @@ django-environ==0.9.0
 # поддержка редис в джанго реализованна только с 4 версии поэтому скачиваем дополнительный пакет
 # чтобы использовать редис в джанго 3.2.16
 django-redis==5.2.0
-
-
-# dev пакеты
-django-debug-toolbar
-django-debug-toolbar-force
-django-extensions
-rich
-ipython

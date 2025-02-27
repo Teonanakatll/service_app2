@@ -14,21 +14,29 @@ import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+import environ
 import sqlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# инициализируем env
+env = environ.Env()
+environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-^uk*pvz%wwti6%sen28-%+795g_7*2px@ba8%5@v!&&n%&$i3d'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = False if os.getenv('DEBUG', 'False').strip().lower() == 'false' else True
 
-ALLOWED_HOSTS = []
+DEBUG = env.bool('DEBUG', default=False)
+
+# с помащю .list() - приводим переменную к списку
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
 
 # Application definition
@@ -41,8 +49,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # django-cachalot !!!!!!!!!!!!!!!!!!!
+    'cachalot',
+
     'clients.apps.ClientsConfig',
     'services.apps.ServicesConfig',
+
 
 ]
 
@@ -65,7 +77,7 @@ ROOT_URLCONF = 'service.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -84,20 +96,14 @@ WSGI_APPLICATION = 'service.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'HOST': os.environ.get('DB_HOST'),
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASS')
+        'HOST': env('DB_HOST'),
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASS')
     }
 }
 
@@ -120,7 +126,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
@@ -138,7 +143,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/static/'
+# Только для разработки:
+STATIC_URL = '/static/'  # Путь, по которому будет доступна статика в браузере
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')  # Папка, в которой будут собраны все статические файлы
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -159,9 +166,12 @@ if DEBUG:
     SHELL_PLUS_IMPORTS = [
         "from utils.utils import *"
     ]
-
-
-
+#
+# if not DEBUG:
+#     INSTALLED_APPS = [app for app in INSTALLED_APPS if app != "debug_toolbar"]
+#     MIDDLEWARE = [m for m in MIDDLEWARE if m != "debug_toolbar.middleware.DebugToolbarMiddleware" and m !=
+#                                                         "debug_toolbar_force.middleware.ForceDebugToolbarMiddleware"]
+#
 
 LOGGING = {
     'version': 1,
@@ -187,7 +197,7 @@ REST_FRAMEWORK = {
 
 CELERY_BROKER_URL = 'redis://redis:6379/0'
 
-# устанавливаем редис кешем по умолчанию
+# устанавливаем редис кешем по умолчанию, django-cachalot использует джанго кеш, джанго кеш использует редис
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -196,4 +206,8 @@ CACHES = {
 }
 # создаём переменную которая будет ключём в кеше
 PRICE_CACHE_NAME = 'price_cache'
+# print('sfsdfsdfsdf')
+CACHALOT_TIMEOUT = 60 * 10  # 10 минут кэша
+CACHALOT_ENABLED = False  # Можно отключить кэширование
+CACHALOT_CACHE = 'default'  # Выбор кэша, если их несколько
 

@@ -35,6 +35,17 @@ docker-compose up --build -d  # Пересобираем контейнеры
 docker-compose run --rm web-app sh -c "python manage.py migrate"
 docker-compose run --rm web-app sh -c "python manage.py shell_plus --ipython"
 
+python manage.py dumpdata > db.json
+python manage.py dumpdata app_name > db.json
+python manage.py dumpdata app_name.ModelName > db.json
+
+python manage.py loaddata db.json
+
+command: bash -c "sleep 10 && python manage.py runserver 0.0.0.0:8000"
+
+                                    django-cachalot
+docker-compose run --rm web-app sh -c "python manage.py invalidate_cachalot (client имя прил.) clients.Client"
+
 Если ты точно знаешь, что не хочешь иметь на диске никакие неиспользуемые контейнеры, образы,
 тома и сети, и тебе нужно быстро очистить систему от всего, что не используется.
 docker system prune -f
@@ -50,3 +61,31 @@ docker images -q --filter "dangling=true" | xargs docker rmi
 docker system prune -f — удалить неиспользуемые контейнеры, образы и тома
 docker volume prune -f — удалить неиспользуемые тома
 docker image prune -f — удалить неиспользуемые образы
+
+
+                                                статика
+docker-compose exec web-app mkdir -p /service/static
+docker-compose exec web-app python manage.py collectstatic
+docker-compose exec web-app python manage.py shell
+
+docker exec -it ... /bin/sh    войти в терминал контейнера
+docker logs ...                посмотреть логи контейнера
+docker-compose exec web-app python manage.py clear_cache   очистить кеш контейнера
+
+                        nginx
+docker-compose exec nginx nginx -t     проверка конфигурации nginx
+docker-compose exec nginx nginx -s reload  перезапуск без остановки контейнера
+ls -l /service/static/                 проверка прав к папке
+chown -R nginx:nginx /static/          Измените владельца файлов и директорий внутри /static/ на пользователя, от которого работает Nginx
+docker-compose restart nginx
+
+C:\Windows\System32\drivers\etc\hosts
+
+Как проверить, раздаётся ли статика?
+В контейнере запусти:
+
+sh
+Копировать
+Редактировать
+ls -lah /static/
+Должны быть твои файлы.

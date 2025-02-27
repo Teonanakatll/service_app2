@@ -1,0 +1,37 @@
+.navBarSection {
+  color: saddlebrown;
+  transition: color .3s ease-out;
+  font-size: 23px;
+  padding: 25px 22px 0;
+}
+.nav {
+  height: n;
+  /* background-color: yellowgreen; */
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  margin-bottom: 20px;
+}
+
+.item {
+	margin-bottom: 10px;
+  transition: color .3s ease-out;
+  a {
+    color: inherit;
+    font-weight: bold;
+  }
+}
+
+.item:hover {
+  color: gold;
+}
+
+.item a.active {
+  color: gold;
+}
+
+.onlineWrap {
+  display: flex;
+  justify-content: start;
+  flex-wrap: wrap;
+}

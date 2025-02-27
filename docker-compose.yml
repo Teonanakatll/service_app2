@@ -1,31 +1,74 @@
-#services:
-#  web-app:
-#    build:
-#      context: .
-#    ports:
-#      - "8000:8000"
-#    volumes:
-#      - ./service:/service
+#x-depends-on: &depends_on
+#  depends_on:
+#    - database
+#    - redis
+services:
+  web-app:
+    build:
+      context: .
+    container_name: app
+    volumes:
+      - ./service:/service
+      - static_volume:/service/static
+    # --reload - только для разработки, перегружает сервер при изменении
+    command: >
+      sh -c "gunicorn --reload service.wsgi:application --bind 0.0.0.0:8000 --log-level info"
 #    command: >
 #      sh -c "python manage.py runserver 0.0.0.0:8000"
+    # изменил порт для тренировки. хост порт 8001
+    ports:
+#      - "8001:8000"
+      - "8000:8000"
+
+
+# Как работает: Ты указываешь файл .env в директории с проектом (или в нужной директории) и Docker Compose
+# будет автоматически загружать все переменные окружения из этого файла и передавать их контейнерам.
+    env_file:
+      - .env
+    depends_on:
+      - database
+
+
+
+  redis:
+    image: redis:7.0.5-alpine
+    hostname: redis
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+#      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./conf/nginx.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/static
+    ports:
+      - "80:80"
+    depends_on:
+      - web-app
+
+  react-app:
+    build:
+      context: ./react-app
+    ports:
+      - "3000:3000"
 #    environment:
-#      - DB_HOST=database
-#      - DB_NAME=dbname
-#      - DB_USER=dbuser
-#      - DB_PASS=pass
-#    depends_on:
-#      - database
-#
-#  database:
-#    image: postgres:14.6-alpine
-#    environment:
-#      - POSTGRES_DB=dbnam
-#      - POSTGRES_USER=dbuser
-#      - POSTGRES_PASSWORD=pass
-#
-#  redis:
-#    image: redis:7.0.5-alpine
-#    hostname: redis
+#      - CHOKIDAR_USEPOLLING=true
+
+
+  database:
+    image: postgres:14.6-alpine
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+    volumes:
+      - db_data:/var/lib/postgresql/data  # том для хранения данных базы данных
+
+# глобальное создание томов
+volumes:
+  db_data:
+  static_volume:
+
 #
 #  worker:
 #    build:
@@ -35,11 +78,9 @@
 #    command: -A celery_app.app worker --loglevel=info
 #    volumes:
 #      - ./service:/service
-#    environment:
-#      - DB_HOST=database
-#      - DB_NAME=dbname
-#      - DB_USER=dbuser
-#      - DB_PASS=pass
+#    env_file:
+#      - .env
+##    <<: *depends_on
 #    depends_on:
 #      - database
 #      - redis
@@ -50,85 +91,95 @@
 #    hostname: flower
 #    entrypoint: celery
 #    command: -A celery_app.app flower
+#    env_file:
+#      - .env
 #    volumes:
 #      - ./service:/service
-#    depends_on:
-#      - redis
 #    ports:
 #      - "5555:5555"
+#    depends_on:
+#      - redis
 
-services:
-  web-app:
-    build:
-      context: .
-    volumes:
-      - ./service:/service
-    command: >
-      sh -c "python manage.py runserver 0.0.0.0:8000"
-    ports:
-      - "8000:8000"
-    environment:
-      - DB_HOST=database
-      - DB_NAME=dbname
-      - DB_USER=dbuser
-      - DB_PASS=pass
-    depends_on:
-      - database
 
-  database:
-    image: postgres:14.6-alpine
-    environment:
-      - POSTGRES_DB=dbname
-      - POSTGRES_USER=dbuser
-      - POSTGRES_PASSWORD=pass
-
-  redis:
-    image: redis:7.0.5-alpine
-    hostname: redis
-
-  worker:
-    build:
-      context: .
-    hostname: worker
-    entrypoint: celery
-    command: -A celery_app.app worker --loglevel=info
-    volumes:
-      - ./service:/service
-    environment:
-      - DB_HOST=database
-      - DB_NAME=dbname
-      - DB_USER=dbuser
-      - DB_PASS=pass
-    depends_on:
-      - database
-      - redis
-
-  worker2:
-    build:
-      context: .
-    hostname: worker2
-    entrypoint: celery
-    command: -A celery_app.app worker --loglevel=info
-    volumes:
-      - ./service:/service
-    environment:
-      - DB_HOST=database
-      - DB_NAME=dbname
-      - DB_USER=dbuser
-      - DB_PASS=pass
-    depends_on:
-      - database
-      - redis
-
-  flower:
-    build:
-      context: .
-    hostname: flower
-    entrypoint: celery
-    command: -A celery_app.app flower
-    volumes:
-      - ./service:/service
-    ports:
-      - "5555:5555"
-    depends_on:
-      - redis
+#services:
+#  web-app:
+#    build:
+#      context: .
+#    volumes:
+#      - ./service:/service
+#    command: [ "/usr/local/bin/wait-for-it", "database:5432", "-t", "30", "--", "python", "manage.py", "runserver", "0.0.0.0:8000" ]
+##    command: >
+##      sh -c "python manage.py runserver 0.0.0.0:8000"
+#    ports:
+#      - "8000:8000"
+#
+##                 ДЛЯ ПРОДАКШЕНА НУЖНО ИСПОЛЬЗОВАТЬ DOCKER VOLUME ЧТОБЫ НЕ ТЕРЯТЬ ДАННЫЕ
+##    volumes:
+##      service_data:
+##      postgres_data:
+##      redis_data:
+#
+## Как работает: Ты указываешь файл .env в директории с проектом (или в нужной директории) и Docker Compose
+## будет автоматически загружать все переменные окружения из этого файла и передавать их контейнерам.
+#    env_file:
+#      - .env
+#    depends_on:
+#      - database
+#
+#  database:
+#    image: postgres:14.6-alpine
+#    environment:
+#      - POSTGRES_DB=${DB_NAME}
+#      - POSTGRES_USER=${DB_USER}
+#      - POSTGRES_PASSWORD=${DB_PASS}
+#
+#  redis:
+#    image: redis:7.0.5-alpine
+#    hostname: redis
+#
+#
+#  worker:
+#    build:
+#      context: .
+#    hostname: worker
+##    entrypoint: celery
+#    command: [ "/usr/local/bin/wait-for-it", "database:5432", "-t", "30", "--", "/usr/local/bin/wait-for-it", "redis:6379", "-t", "30", "--", "celery", "-A", "celery_app.app", "worker", "--loglevel=info" ]
+##    command: -A celery_app.app worker --loglevel=info
+#    volumes:
+#      - ./service:/service
+#    env_file:
+#      - .env
+##    <<: *depends_on
+#    depends_on:
+#      - database
+#      - redis
+#
+#  worker2:
+#    build:
+#      context: .
+#    hostname: worker2
+##    entrypoint: celery
+#    command: [ "/usr/local/bin/wait-for-it", "database:5432", "-t", "30", "--", "/usr/local/bin/wait-for-it", "redis:6379", "-t", "30", "--", "celery", "-A", "celery_app.app", "worker", "--loglevel=info" ]
+##    command: -A celery_app.app worker --loglevel=info
+#    volumes:
+#      - ./service:/service
+#    env_file:
+#      - .env
+##    <<: *depends_on
+#    depends_on:
+#      - database
+#      - redis
+#
+#  flower:
+#    build:
+#      context: .
+#    hostname: flower
+##    entrypoint: celery
+#    command: [ "/usr/local/bin/wait-for-it", "redis:6379", "-t", "30", "--", "celery", "-A", "celery_app.app", "flower" ]
+##    command: -A celery_app.app flower
+#    volumes:
+#      - ./service:/service
+#    ports:
+#      - "5555:5555"
+#    depends_on:
+#      - redis
