@@ -74,7 +74,7 @@ jobs:
             echo "SECRET_KEY=django-insecure-test-key" >> .env
             echo "DEBUG=False" >> .env
             echo "ALLOWED_HOSTS=localhost,127.0.0.1,212.67.14.125" >> .env
-            curl -H "Authorization: token $GITHUB_TOKEN" -O https://raw.githubusercontent.com/Teonanakatl/service_app2/main/docker-compose.yml
+            curl -H "Authorization: token $GITHUB_TOKEN" -O https://raw.githubusercontent.com/Teonanakatl/service_app2/master/docker-compose.yml
             docker-compose pull
             docker-compose up -d
             docker-compose ps
