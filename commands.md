@@ -79,6 +79,13 @@ ls -l /service/static/                 проверка прав к папке
 chown -R nginx:nginx /static/          Измените владельца файлов и директорий внутри /static/ на пользователя, от которого работает Nginx
 docker-compose restart nginx
 
+docker-compose down -v  # Останавливает контейнеры и удаляет тома
+docker volume inspect react_volume
+docker volume rm react_volume
+
+> запуск нескольких контейнеров
+docker-compose --profile dev up
+
 C:\Windows\System32\drivers\etc\hosts
 
 Как проверить, раздаётся ли статика?

@@ -1,10 +1,9 @@
-
 services:
   web-app:
     build:
       context: .
     container_name: app
-    command: gunicorn service.wsgi:application --bind 0.0.0.0:8000 --log-level info
+    command: gunicorn --reload service.wsgi:application --bind 0.0.0.0:8000 --log-level info  # Добавлен --reload
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -19,6 +18,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
+    volumes:
+      - ./service:/service  # Возвращаем для разработки
 
   redis:
     image: redis:7.0.5-alpine
@@ -86,6 +87,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    volumes:
+      - ./service:/service  # Для разработки
 
   celery-beat:
     build:
@@ -108,6 +111,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    volumes:
+      - ./service:/service  # Для разработки
 
   flower:
     build:
@@ -129,6 +134,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    volumes:
+      - ./service:/service  # Для разработки
 
 volumes:
   db_data:

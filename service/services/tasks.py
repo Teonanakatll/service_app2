@@ -1,6 +1,6 @@
 import datetime
 import time
-
+from celery_app import app
 from celery import shared_task
 from django.conf import settings
 from django.core.cache import cache
@@ -54,3 +54,24 @@ def set_comment(subscription_id):
     # данные изменяются и кешированные данные больше не актуальны, либо для освобождения памяти
     ### логика в том чтобы удалить кеш при обновлении информации и получается при запроссе через вью списка записей
     # кеша не будет поэтому он заново вычислиться и присвоится с актуальным значением
+
+@shared_task
+def task_good():
+    time.sleep(10)
+    print('fffffffffffffffffffffffffffffffffff')
+
+@shared_task
+def task_print():
+
+    print('1000')
+
+@app.task()
+def test_task():
+    print("Тестовая задача выполнена!")
+
+# app.conf.beat_schedule = {
+#     "test": {
+#         "task": 'services.tasks.test_task',
+#         "schedule": time.timedelta(seconds=10),
+#     },
+# }

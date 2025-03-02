@@ -19,14 +19,15 @@ from django.urls import path, include
 from rest_framework import routers
 
 from . import settings
-from services.views import SubscriptionView, photo_view
+from services.views import SubscriptionView, photo_view, health
 
 router = routers.DefaultRouter()
 router.register(r'api/subscriptions', SubscriptionView)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('photo/', photo_view, name="photo")
+    path('api/admin/', admin.site.urls),
+    path('api/photo/', photo_view, name="photo"),
+    path('api/health/', health)
 ]
 
 urlpatterns += router.urls

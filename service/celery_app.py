@@ -1,7 +1,9 @@
 import os
 import time
+from datetime import timedelta
 
 from celery import Celery
+from celery.schedules import crontab
 from django.conf import settings
 
 
@@ -24,4 +26,36 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'service.settings')
 app = Celery('service')
 app.config_from_object('django.conf:settings')
 app.conf.broker_url = settings.CELERY_BROKER_URL
+
+app.conf.beat_schedule = settings.CELERY_BEAT_SCHEDULE
+
+
+
+# Указываем расписание
+# app.conf.beat_schedule = {
+#     'task_good': {
+#         'task': 'services.tasks.task_good',
+#         'schedule': timedelta(seconds=5),  # Каждые 5 секунд
+#     },
+# }
+# app.conf.beat_schedule = {
+#     "task_print": {
+#         "task": "services.tasks.task_print",
+#         "schedule": crontab(minute="*/1"),  # Каждую минуту
+#     },
+#     'task_good': {
+#         'task': 'services.tasks.task_good',
+#         'schedule': timedelta(seconds=5),  # Каждые 5 секунд
+#     },
+#     'test_task': {
+#         'task': 'services.tasks.test_task',
+#         'schedule': timedelta(seconds=5),
+#     },
+#     'set_price': {
+#         'task': 'services.tasks.set_price',
+#         'schedule': timedelta(seconds=5),
+#     }
+# }
+
+
 app.autodiscover_tasks()

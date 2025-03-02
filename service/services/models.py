@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models.signals import post_delete
 
 from .signals import delete_cache_total_sum
-from .tasks import set_price, set_comment
+from .tasks import set_price, set_comment, test_task
 
 # внутри контейнера код запускается относительно service, и там clients находится в корне
 from clients.models import Client
@@ -100,6 +100,6 @@ class Subscription(models.Model):
         # и в случае если обьект создаётся тогда запускаем таску подсчёта полной стоимости
         if creating:
             set_price.delay(self.id)
-
+            test_task.delay()
         return result
 

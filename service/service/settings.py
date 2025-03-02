@@ -11,11 +11,14 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import logging
 import os
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 import environ
 import sqlparse
+from celery.schedules import crontab
+from services import tasks
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -196,6 +199,23 @@ REST_FRAMEWORK = {
 
 
 CELERY_BROKER_URL = 'redis://redis:6379/0'
+
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+# CELERY_RESULT_BACKEND = 'db+postgresql://user:password@localhost/mydatabase' # можно использовать дб
+# CELERY_RESULT_BACKEND = 'file:///var/celery/results'  # в файле
+# CELERY_RESULT_BACKEND = 'django-db'  # через джанго орм
+
+CELERY_BEAT_SCHEDULE = {
+    'task_good': {
+        'task': 'services.tasks.task_good',  # Полный путь к задаче
+        'schedule': timedelta(seconds=5),  # Каждые 5 секунд
+    },
+    'test_task': {
+        'task': 'services.tasks.test_task',  # Полный путь к задаче
+        'schedule': timedelta(seconds=5),  # Каждые 5 секунд
+    },
+
+}
 
 # устанавливаем редис кешем по умолчанию, django-cachalot использует джанго кеш, джанго кеш использует редис
 CACHES = {

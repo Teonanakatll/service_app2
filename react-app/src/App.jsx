@@ -1,40 +1,35 @@
-import Header from "./components/Header/Header";
-import Navbar from "./components/Navbar/Navbar";
-import Profile from "./components/Profile/Profile";
-import Dialogs from "./components/Dialogs/Dialogs";
-import News from "./components/News/News";
-import Music from "./components/Music/Music";
-import Settings from "./components/Settings/Settings";
+import { useState } from 'react'
+import reactLogo from './assets/react.svg'
+import viteLogo from '/vite.svg'
+import './App.css'
 
-// npm react-router-dom
-import { Routes, Route, BrowserRouter } from "react-router-dom";
-import "./App.css";
-
-const App = (props) => {
-  // debugger
-  const onlineList = props.state.dialogsPage.dialogs.filter(dialog => dialog.online)
+function App() {
+  const [count, setCount] = useState(0)
 
   return (
-    <BrowserRouter>
-      <div className="app-wrapper">
-        <Header />
-        <Navbar onlineList={onlineList} />
-        <div className={`app-wrapper-content gitem`}>
-          <Routes>
-            {/* копирует содержимое profilePage, тоесть копирует ссылку на содержание его обьекта и в 
-            обьекте который принимает этот пропс при обращении к state будет доступ к его полям.
-            РОУТИНГ НИОТЧЕГО НЕ ЗАВИСИТ ЕГО ЗАДАЧА СЛЕДИТЬ ЗА АДРЕСНОЙ СТРОКОЙ!! */}
-            <Route path="/profile" element={<Profile state={props.state.profilePage} dispatch={props.dispatch} />} />
-            <Route path="/dialogs/*" element={<Dialogs state={props.state.dialogsPage} dispatch={props.dispatch} />} />
-            <Route path="/news" element={<News />} />
-            <Route path="/music" element={<Music />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </div>
-
+    <>
+      <div>
+        <a href="https://vite.dev" target="_blank">
+          <img src={viteLogo} className="logo" alt="Vite logo" />
+        </a>
+        <a href="https://react.dev" target="_blank">
+          <img src={reactLogo} className="logo react" alt="React logo" />
+        </a>
       </div>
-    </BrowserRouter>
-  );
-};
+      <h1>Vite + React + Hrenact</h1>
+      <div className="card">
+        <button onClick={() => setCount((count) => count + 1)}>
+          count is {count}
+        </button>
+        <p>
+          Edit <code>src/App.jsx</code> and save to test HMR
+        </p>
+      </div>
+      <p className="read-the-docs">
+        Click on the Vite and React logos to learn more
+      </p>
+    </>
+  )
+}
 
-export default App;
+export default App

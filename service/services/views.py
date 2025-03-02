@@ -1,4 +1,5 @@
 from django.db.models import Prefetch, F, Sum
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.core.cache import cache
 from rest_framework.viewsets import ReadOnlyModelViewSet
@@ -42,3 +43,7 @@ class SubscriptionView(ReadOnlyModelViewSet):
 
 def photo_view(request):
     return render(request, 'services/photo.html')
+
+def health(request):
+    print('HELTH!!!!!!!!!!!!!!!!!!!!111')
+    return JsonResponse({"status": "ok"})
