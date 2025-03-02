@@ -1,4 +1,4 @@
-name: Test Run on GitHub Runner
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  test-run:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -15,39 +15,43 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Install Docker Compose
-        run: |
-          sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Create .env file
+      - name: Build and push web-app image
         run: |
-          echo "DB_HOST=database" > .env
-          echo "DB_NAME=dbname" >> .env
-          echo "DB_USER=dbuser" >> .env
-          echo "DB_PASS=pass" >> .env
-          echo "SECRET_KEY=django-insecure-test-key" >> .env
-          echo "DEBUG=True" >> .env
-          echo "ALLOWED_HOSTS=localhost,127.0.0.1" >> .env
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/service-app:latest -f Dockerfile.web .
+          docker push ${{ secrets.DOCKER_USERNAME }}/service-app:latest
 
-      - name: Start services
+      - name: Build and push nginx image
         run: |
-          docker-compose up -d --build
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/service-nginx:latest -f react-app/Dockerfile.nginx .
+          docker push ${{ secrets.DOCKER_USERNAME }}/service-nginx:latest
 
-      - name: Check service status
+      - name: Deploy to server
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: root
         run: |
-          sleep 60
-          docker-compose ps
-          docker-compose logs
-
-      - name: Test health checks
-        run: |
-          docker exec app curl -f http://localhost:8000/api/health/
-          docker exec nginx curl -f http://localhost/api/health/
-          docker exec flower curl -f http://localhost:5555/api/workers || echo "Flower health check failed, continuing..."
-
-      - name: Stop services
-        if: always()  # Выполняется даже при ошибке
-        run: |
-          docker-compose down -v
+          echo "$SSH_PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << 'EOF'
+            mkdir -p /root/service-app
+            cd /root/service-app
+            echo "DB_HOST=database" > .env
+            echo "DB_NAME=dbname" >> .env
+            echo "DB_USER=dbuser" >> .env
+            echo "DB_PASS=pass" >> .env
+            echo "SECRET_KEY=django-insecure-test-key" >> .env
+            echo "DEBUG=False" >> .env
+            echo "ALLOWED_HOSTS=localhost,127.0.0.1,212.67.14.125" >> .env
+            curl -O https://raw.githubusercontent.com/<твой_репозиторий>/main/docker-compose.yml
+            docker-compose pull
+            docker-compose up -d
+            docker-compose ps
+          EOF
+          rm private_key.pem
