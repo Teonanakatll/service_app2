@@ -15,6 +15,46 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Debug secrets
+        run: |
+          echo "DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}"
+          echo "DOCKER_PASSWORD length: ${#DOCKER_PASSWORD}"
+          echo "SSH_PRIVATE_KEY length: ${#SSH_PRIVATE_KEY}"
+          if [ -z "${{ secrets.DOCKER_PASSWORD }}" ]; then echo "DOCKER_PASSWORD is empty!"; fi
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then echo "SSH_PRIVATE_KEY is empty!"; fi
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push web-app image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/service-app:latest -f Dockerfile .
+          docker push ${{ secrets.DOCKER_USERNAME }}/service-app:latest
+
+      - name: Build and push nginx image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/service-nginx:latest -f react-app/Dockerfile.nginx .
+          docker push ${{ secrets.DOCKER_USERNAME }}/service-nginx:latest
+
+      - name: Debug SSH key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
+          echo "Key content:"
+          cat private_key.pem
+          chmod 600 private_key.pem
+          ssh-keygen -y -f private_key.pem -e > public_key.pem 2>/dev/null || echo "Key invalid"
+          if [ -s public_key.pem ]; then
+            echo "Public key extracted successfully:"
+            cat public_key.pem
+            ssh -i private_key.pem -v root@212.67.14.125 echo "Test SSH" || echo "SSH failed: $?"
+          else
+            echo "Failed to extract public key, key may be invalid."
+          fi
+          rm -f private_key.pem public_key.pem
+
       - name: Deploy to server
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -33,9 +73,10 @@ jobs:
             echo "SECRET_KEY=django-insecure-test-key" >> .env
             echo "DEBUG=False" >> .env
             echo "ALLOWED_HOSTS=localhost,127.0.0.1,212.67.14.125" >> .env
-            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/docker-compose.yml
-            docker-compose pull
-            docker-compose up -d
-            docker-compose ps
+            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/docker-compose.yml  # Обновлённый путь
+            ls -l .env  # Проверить наличие .env
+            docker-compose --env-file .env pull  # Указать путь к .env
+            docker-compose --env-file .env up -d  # Указать путь к .env
+            docker-compose --env-file .env ps     # Указать путь к .env
           EOF
           rm private_key.pem
