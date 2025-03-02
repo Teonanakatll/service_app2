@@ -19,7 +19,9 @@ jobs:
         run: |
           echo "DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}"
           echo "DOCKER_PASSWORD length: ${#DOCKER_PASSWORD}"
+          echo "SSH_PRIVATE_KEY length: ${#SSH_PRIVATE_KEY}"
           if [ -z "${{ secrets.DOCKER_PASSWORD }}" ]; then echo "DOCKER_PASSWORD is empty!"; fi
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then echo "SSH_PRIVATE_KEY is empty!"; fi
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -29,13 +31,21 @@ jobs:
 
       - name: Build and push web-app image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/service-app:latest -f Dockerfile .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/service-app:latest -f Dockerfile.web .
           docker push ${{ secrets.DOCKER_USERNAME }}/service-app:latest
 
       - name: Build and push nginx image
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/service-nginx:latest -f react-app/Dockerfile.nginx .
           docker push ${{ secrets.DOCKER_USERNAME }}/service-nginx:latest
+
+      - name: Debug SSH key
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key.pem
+          cat private_key.pem | grep -v "^----" | grep -v "withub-action" > private_key_clean.pem
+          mv private_key_clean.pem private_key.pem
+          chmod 600 private_key.pem
+          ssh -i private_key.pem -v root@212.67.14.125 echo "Test SSH" || echo "SSH failed"
 
       - name: Deploy to server
         env:
@@ -44,6 +54,8 @@ jobs:
           SERVER_USER: root
         run: |
           echo "$SSH_PRIVATE_KEY" > private_key.pem
+          cat private_key.pem | grep -v "^----" | grep -v "withub-action" > private_key_clean.pem
+          mv private_key_clean.pem private_key.pem
           chmod 600 private_key.pem
           ssh -i private_key.pem -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << 'EOF'
             mkdir -p /root/service-app
@@ -55,7 +67,7 @@ jobs:
             echo "SECRET_KEY=django-insecure-test-key" >> .env
             echo "DEBUG=False" >> .env
             echo "ALLOWED_HOSTS=localhost,127.0.0.1,212.67.14.125" >> .env
-            curl -O https://raw.githubusercontent.com/<твой_репозиторий>/main/docker-compose.yml
+            curl -O https://raw.githubusercontent.com/Teonanakatl/service_app2/main/docker-compose.yml
             docker-compose pull
             docker-compose up -d
             docker-compose ps
