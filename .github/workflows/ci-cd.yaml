@@ -15,14 +15,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Debug secrets
-        run: |
-          echo "DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}"
-          echo "DOCKER_PASSWORD length: ${#DOCKER_PASSWORD}"
-          echo "SSH_PRIVATE_KEY length: ${#SSH_PRIVATE_KEY}"
-          if [ -z "${{ secrets.DOCKER_PASSWORD }}" ]; then echo "DOCKER_PASSWORD is empty!"; fi
-          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then echo "SSH_PRIVATE_KEY is empty!"; fi
-
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -39,22 +31,6 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/service-nginx:latest -f react-app/Dockerfile.nginx .
           docker push ${{ secrets.DOCKER_USERNAME }}/service-nginx:latest
 
-      - name: Debug SSH key
-        run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
-          echo "Key content:"
-          cat private_key.pem
-          chmod 600 private_key.pem
-          ssh-keygen -y -f private_key.pem -e > public_key.pem 2>/dev/null || echo "Key invalid"
-          if [ -s public_key.pem ]; then
-            echo "Public key extracted successfully:"
-            cat public_key.pem
-            ssh -i private_key.pem -v root@212.67.14.125 echo "Test SSH" || echo "SSH failed: $?"
-          else
-            echo "Failed to extract public key, key may be invalid."
-          fi
-          rm -f private_key.pem public_key.pem
-
       - name: Deploy to server
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -68,14 +44,10 @@ jobs:
             cd /root/service-app
             curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/.env
             curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/docker-compose.yml
-            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/Dockerfile  # Загружаем Dockerfile
-            ls -l .env
-            ls -l docker-compose.yml
-            ls -l Dockerfile  # Проверить наличие Dockerfile
-            docker-compose --env-file .env config  # Проверить конфигурацию
+            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/Dockerfile
             docker-compose --env-file .env pull
-            docker-compose --env-file .env up -d 2>&1 | tee deploy.log  # Логи в файл
+            docker-compose --env-file .env up -d 2>&1 | tee deploy.log
             docker-compose --env-file .env ps
-            cat deploy.log  # Вывести логи
+            cat deploy.log
           EOF
           rm private_key.pem
