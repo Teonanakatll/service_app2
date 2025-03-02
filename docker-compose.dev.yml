@@ -1,143 +1,143 @@
-services:
-  web-app:
-    build:
-      context: .
-    container_name: app
-    command: gunicorn --reload service.wsgi:application --bind 0.0.0.0:8000 --log-level info  # Добавлен --reload
-    ports:
-      - "8000:8000"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    env_file:
-      - .env
-    depends_on:
-      database:
-        condition: service_healthy
-    volumes:
-      - ./service:/service  # Возвращаем для разработки
-
-  redis:
-    image: redis:7.0.5-alpine
-    hostname: redis
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-
-  nginx:
-    build:
-      context: .
-      dockerfile: ./react-app/Dockerfile.nginx
-    container_name: nginx
-    ports:
-      - "80:80"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/api/health/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    depends_on:
-      web-app:
-        condition: service_healthy
-    volumes:
-      - static_volume:/static
-      - media_volume:/media
-
-  database:
-    image: postgres:14.6-alpine
-    environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASS}
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
-
-  worker:
-    build:
-      context: .
-    hostname: worker
-    entrypoint: celery
-    command: -A celery_app.app worker --loglevel=info --concurrency=4
-    env_file:
-      - .env
-    depends_on:
-      database:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "celery -A celery_app.app status"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    volumes:
-      - ./service:/service  # Для разработки
-
-  celery-beat:
-    build:
-      context: .
-    entrypoint: celery
-    command: -A celery_app.app beat --loglevel=info
-    env_file:
-      - .env
-    depends_on:
-      redis:
-        condition: service_healthy
-      database:
-        condition: service_healthy
-      worker:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "ps aux | grep '[c]elery beat' || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    volumes:
-      - ./service:/service  # Для разработки
-
-  flower:
-    build:
-      context: .
-    hostname: flower
-    entrypoint: celery
-    command: -A celery_app.app flower
-    env_file:
-      - .env
-    ports:
-      - "5555:5555"
-    depends_on:
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5555/api/workers"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    volumes:
-      - ./service:/service  # Для разработки
-
-volumes:
-  db_data:
-  static_volume:
-  media_volume:
+#services:
+#  web-app:
+#    build:
+#      context: .
+#    container_name: app
+#    command: gunicorn --reload service.wsgi:application --bind 0.0.0.0:8000 --log-level info  # Добавлен --reload
+#    ports:
+#      - "8000:8000"
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health/"]
+#      interval: 30s
+#      timeout: 5s
+#      retries: 3
+#      start_period: 10s
+#    env_file:
+#      - .env
+#    depends_on:
+#      database:
+#        condition: service_healthy
+#    volumes:
+#      - ./service:/service  # Возвращаем для разработки
+#
+#  redis:
+#    image: redis:7.0.5-alpine
+#    hostname: redis
+#    healthcheck:
+#      test: ["CMD", "redis-cli", "ping"]
+#      interval: 30s
+#      timeout: 5s
+#      retries: 3
+#      start_period: 30s
+#
+#  nginx:
+#    build:
+#      context: .
+#      dockerfile: ./react-app/Dockerfile.nginx
+#    container_name: nginx
+#    ports:
+#      - "80:80"
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost/api/health/"]
+#      interval: 30s
+#      timeout: 5s
+#      retries: 3
+#    depends_on:
+#      web-app:
+#        condition: service_healthy
+#    volumes:
+#      - static_volume:/static
+#      - media_volume:/media
+#
+#  database:
+#    image: postgres:14.6-alpine
+#    environment:
+#      - POSTGRES_DB=${DB_NAME}
+#      - POSTGRES_USER=${DB_USER}
+#      - POSTGRES_PASSWORD=${DB_PASS}
+#    volumes:
+#      - db_data:/var/lib/postgresql/data
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+#      interval: 30s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 60s
+#
+#  worker:
+#    build:
+#      context: .
+#    hostname: worker
+#    entrypoint: celery
+#    command: -A celery_app.app worker --loglevel=info --concurrency=4
+#    env_file:
+#      - .env
+#    depends_on:
+#      database:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD-SHELL", "celery -A celery_app.app status"]
+#      interval: 30s
+#      timeout: 5s
+#      retries: 3
+#      start_period: 30s
+#    volumes:
+#      - ./service:/service  # Для разработки
+#
+#  celery-beat:
+#    build:
+#      context: .
+#    entrypoint: celery
+#    command: -A celery_app.app beat --loglevel=info
+#    env_file:
+#      - .env
+#    depends_on:
+#      redis:
+#        condition: service_healthy
+#      database:
+#        condition: service_healthy
+#      worker:
+#        condition: service_healthy
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD-SHELL", "ps aux | grep '[c]elery beat' || exit 1"]
+#      interval: 30s
+#      timeout: 5s
+#      retries: 3
+#      start_period: 30s
+#    volumes:
+#      - ./service:/service  # Для разработки
+#
+#  flower:
+#    build:
+#      context: .
+#    hostname: flower
+#    entrypoint: celery
+#    command: -A celery_app.app flower
+#    env_file:
+#      - .env
+#    ports:
+#      - "5555:5555"
+#    depends_on:
+#      redis:
+#        condition: service_healthy
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:5555/api/workers"]
+#      interval: 30s
+#      timeout: 5s
+#      retries: 3
+#      start_period: 30s
+#    volumes:
+#      - ./service:/service  # Для разработки
+#
+#volumes:
+#  db_data:
+#  static_volume:
+#  media_volume:
