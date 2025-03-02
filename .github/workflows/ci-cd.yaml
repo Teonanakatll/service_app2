@@ -60,6 +60,7 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_USER: root
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
           chmod 600 private_key.pem
@@ -73,7 +74,7 @@ jobs:
             echo "SECRET_KEY=django-insecure-test-key" >> .env
             echo "DEBUG=False" >> .env
             echo "ALLOWED_HOSTS=localhost,127.0.0.1,212.67.14.125" >> .env
-            curl -O https://raw.githubusercontent.com/Teonanakatl/service_app2/master/docker-compose.yml
+            curl -H "Authorization: token $GITHUB_TOKEN" -O https://raw.githubusercontent.com/Teonanakatl/service_app2/main/docker-compose.yml
             docker-compose pull
             docker-compose up -d
             docker-compose ps
