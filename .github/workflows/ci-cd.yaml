@@ -3,7 +3,7 @@ name: Test Run on GitHub Runner
 on:
   push:
     branches:
-      - main  # Или другая ветка, например, dev
+      - master  # Или другая ветка, например, dev
 
 jobs:
   test-run:
