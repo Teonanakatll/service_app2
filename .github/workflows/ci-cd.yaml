@@ -3,10 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - master  # Запускать workflow при пуше в ветку main
-  pull_request:
-    branches:
-      - master  # Запускать workflow при создании pull request в ветку main
+      - main
 
 jobs:
   build-and-test:
