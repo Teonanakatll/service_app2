@@ -66,12 +66,16 @@ jobs:
           ssh -i private_key.pem -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << 'EOF'
             mkdir -p /root/service-app
             cd /root/service-app
-            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/.env  # Загружаем .env
-            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/docker-compose.yml  # Загружаем docker-compose.yml
-            ls -l .env  # Проверить наличие .env
-            ls -l docker-compose.yml  # Проверить наличие docker-compose.yml
-            docker-compose --env-file .env pull  # Указать путь к .env
-            docker-compose --env-file .env up -d  # Указать путь к .env
-            docker-compose --env-file .env ps     # Указать путь к .env
+            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/.env
+            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/docker-compose.yml
+            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/Dockerfile  # Загружаем Dockerfile
+            ls -l .env
+            ls -l docker-compose.yml
+            ls -l Dockerfile  # Проверить наличие Dockerfile
+            docker-compose --env-file .env config  # Проверить конфигурацию
+            docker-compose --env-file .env pull
+            docker-compose --env-file .env up -d 2>&1 | tee deploy.log  # Логи в файл
+            docker-compose --env-file .env ps
+            cat deploy.log  # Вывести логи
           EOF
           rm private_key.pem
