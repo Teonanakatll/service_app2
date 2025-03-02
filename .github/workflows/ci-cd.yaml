@@ -31,7 +31,7 @@ jobs:
 
       - name: Build and push web-app image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/service-app:latest -f Dockerfile.web .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/service-app:latest -f Dockerfile .
           docker push ${{ secrets.DOCKER_USERNAME }}/service-app:latest
 
       - name: Build and push nginx image
