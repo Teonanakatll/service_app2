@@ -113,6 +113,7 @@ services:
     build:
       context: .
     hostname: flower
+    container_name: flower
     entrypoint: celery
     command: -A celery_app.app flower
     env_file:
