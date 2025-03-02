@@ -1,46 +1,60 @@
-name: CI/CD Pipeline
+name: Test Run on GitHub Runner
 
 on:
   push:
     branches:
-      - master
+      - main  # Или другая ветка, например, dev
 
 jobs:
-  build-and-test:
+  test-run:
     runs-on: ubuntu-latest
     steps:
+      # 1. Чекаут кода
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2. Настройка Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # 3. Установка Docker Compose
       - name: Install Docker Compose
         run: |
-          curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          chmod +x /usr/local/bin/docker-compose
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and start containers
+      # 4. Создание .env файла
+      - name: Create .env file
         run: |
-          docker-compose -f docker-compose.yml up -d --build
+          echo "DB_HOST=database" > .env
+          echo "DB_NAME=dbname" >> .env
+          echo "DB_USER=dbuser" >> .env
+          echo "DB_PASS=pass" >> .env
+          echo "SECRET_KEY=django-insecure-test-key" >> .env
+          echo "DEBUG=True" >> .env
+          echo "ALLOWED_HOSTS=localhost,127.0.0.1" >> .env
 
-      - name: Wait for services to be healthy
+      # 5. Запуск docker-compose
+      - name: Start services
         run: |
+          docker-compose up -d --build
+
+      # 6. Проверка состояния сервисов
+      - name: Check service status
+        run: |
+          sleep 60  # Даём время на запуск всех сервисов
           docker-compose ps
-          timeout 300 bash -c 'until docker-compose ps | grep "healthy"; do sleep 10; done'
+          docker-compose logs
 
-      - name: Run tests (если есть)
+      # 7. Тест health checks
+      - name: Test health checks
         run: |
-          docker-compose exec web-app python manage.py test
+          docker exec app curl -f http://localhost:8000/api/health/
+          docker exec nginx curl -f http://localhost/api/health/
+          docker exec flower curl -f http://localhost:5555/api/workers
 
-      - name: Stop containers
-        if: always()
+      # 8. Остановка сервисов
+      - name: Stop services
         run: |
-          docker-compose down
+          docker-compose down -v
