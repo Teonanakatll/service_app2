@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   build-and-deploy:
@@ -66,15 +66,10 @@ jobs:
           ssh -i private_key.pem -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << 'EOF'
             mkdir -p /root/service-app
             cd /root/service-app
-            echo "DB_HOST=database" > .env
-            echo "DB_NAME=dbname" >> .env
-            echo "DB_USER=dbuser" >> .env
-            echo "DB_PASS=pass" >> .env
-            echo "SECRET_KEY=django-insecure-test-key" >> .env
-            echo "DEBUG=False" >> .env
-            echo "ALLOWED_HOSTS=localhost,127.0.0.1,212.67.14.125" >> .env
-            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/docker-compose.yml  # Обновлённый путь
+            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/.env  # Загружаем .env
+            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/docker-compose.yml  # Загружаем docker-compose.yml
             ls -l .env  # Проверить наличие .env
+            ls -l docker-compose.yml  # Проверить наличие docker-compose.yml
             docker-compose --env-file .env pull  # Указать путь к .env
             docker-compose --env-file .env up -d  # Указать путь к .env
             docker-compose --env-file .env ps     # Указать путь к .env
