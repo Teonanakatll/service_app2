@@ -28,7 +28,7 @@ app.config_from_object('django.conf:settings')
 app.conf.broker_url = settings.CELERY_BROKER_URL
 
 app.conf.beat_schedule = settings.CELERY_BEAT_SCHEDULE
-# sdfsdfsf
+# sdfsdfsfdfgdfg
 
 
 # Указываем расписание
