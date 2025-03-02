@@ -203,7 +203,7 @@ CELERY_BROKER_URL = 'redis://redis:6379/0'
 CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 # CELERY_RESULT_BACKEND = 'db+postgresql://user:password@localhost/mydatabase' # можно использовать дб
 # CELERY_RESULT_BACKEND = 'file:///var/celery/results'  # в файле
-# CELERY_RESULT_BACKEND = 'django-db'  # через джанго орм
+# CELERY_RESULT_BACKEND = 'django-db'  # через джанго орм dfsdfsdfs
 
 CELERY_BEAT_SCHEDULE = {
     'task_good': {
