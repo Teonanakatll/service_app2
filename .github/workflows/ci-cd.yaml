@@ -3,23 +3,25 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main
+      - main  # Запускать workflow при пуше в ветку main
+  pull_request:
+    branches:
+      - main  # Запускать workflow при создании pull request в ветку main
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Используем стандартный GitHub-hosted runner
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
       - name: Install Docker Compose
         run: |
           curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
           docker-compose --version
+            - name: Checkout code
+        uses: actions/checkout@v2  # Клонируем репозиторий
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -34,6 +36,7 @@ jobs:
       - name: Wait for services to be healthy
         run: |
           docker-compose ps
+          # Ждём, пока все сервисы станут здоровыми
           timeout 300 bash -c 'until docker-compose ps | grep "healthy"; do sleep 10; done'
 
       - name: Run tests (если есть)
@@ -41,6 +44,6 @@ jobs:
           docker-compose exec web-app python manage.py test
 
       - name: Stop containers
-        if: always()
+        if: always()  # Останавливаем контейнеры даже если тесты упали
         run: |
           docker-compose down
