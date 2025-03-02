@@ -41,11 +41,19 @@ jobs:
 
       - name: Debug SSH key
         run: |
-          echo "$SSH_PRIVATE_KEY" > private_key.pem
-          cat private_key.pem | grep -v "^----" | grep -v "withub-action" > private_key_clean.pem
-          mv private_key_clean.pem private_key.pem
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
+          echo "Key content:"
+          cat private_key.pem
           chmod 600 private_key.pem
-          ssh -i private_key.pem -v root@212.67.14.125 echo "Test SSH" || echo "SSH failed"
+          ssh-keygen -y -f private_key.pem -e > public_key.pem 2>/dev/null || echo "Key invalid"
+          if [ -s public_key.pem ]; then
+            echo "Public key extracted successfully:"
+            cat public_key.pem
+            ssh -i private_key.pem -v root@212.67.14.125 echo "Test SSH" || echo "SSH failed: $?"
+          else
+            echo "Failed to extract public key, key may be invalid."
+          fi
+          rm -f private_key.pem public_key.pem
 
       - name: Deploy to server
         env:
@@ -53,9 +61,7 @@ jobs:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_USER: root
         run: |
-          echo "$SSH_PRIVATE_KEY" > private_key.pem
-          cat private_key.pem | grep -v "^----" | grep -v "withub-action" > private_key_clean.pem
-          mv private_key_clean.pem private_key.pem
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
           chmod 600 private_key.pem
           ssh -i private_key.pem -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << 'EOF'
             mkdir -p /root/service-app
