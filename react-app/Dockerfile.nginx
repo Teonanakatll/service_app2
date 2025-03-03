@@ -10,5 +10,3 @@ FROM nginx:alpine
 COPY --from=build /app/dist /react
 COPY ./service/static /static
 COPY ./conf/prodnginx.conf /etc/nginx/conf.d/default.conf
-COPY ./conf/fullchain.pem /etc/letsencrypt/live/react.dve-verevki.ru/fullchain.pem
-COPY ./conf/privkey.pem /etc/letsencrypt/live/react.dve-verevki.ru/privkey.pem
