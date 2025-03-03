@@ -85,6 +85,8 @@ docker volume rm react_volume
 
 > запуск нескольких контейнеров
 docker-compose --profile dev up
+> 
+> ssh -i ~/.ssh/id_rsa root@212.67.14.125
 
 C:\Windows\System32\drivers\etc\hosts
 
