@@ -73,13 +73,16 @@ jobs:
             curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/Dockerfile
             curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/requirements.txt
             mkdir -p service
-            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/service/entrypoint.sh  # Загружаем в папку service/
-            chmod +x service/entrypoint.sh  # Устанавливаем права для файла в service/
+            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/service/entrypoint.sh
+            chmod +x service/entrypoint.sh
+            mkdir -p react-app  # Создаём папку react-app
+            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/react-app/Dockerfile.nginx  # Загружаем Dockerfile.nginx
             ls -l .env || echo ".env not found"
             ls -l docker-compose.yml || echo "docker-compose.yml not found"
             ls -l Dockerfile || echo "Dockerfile not found"
             ls -l requirements.txt || echo "requirements.txt not found"
             ls -l service/entrypoint.sh || echo "service/entrypoint.sh not found"
+            ls -l react-app/Dockerfile.nginx || echo "react-app/Dockerfile.nginx not found"
             docker-compose --env-file .env config || echo "Config error: $?"
             docker-compose --env-file .env pull || echo "Pull error: $?"
             docker-compose --env-file .env up -d || { echo "Docker Compose failed with error $?"; exit 1; }
