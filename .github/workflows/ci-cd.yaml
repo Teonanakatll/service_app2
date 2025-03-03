@@ -45,9 +45,15 @@ jobs:
             curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/.env
             curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/docker-compose.yml
             curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/Dockerfile
+            ls -l .env
+            ls -l docker-compose.yml
+            ls -l Dockerfile
+            free -h  # Проверить память
+            docker-compose --env-file .env config
             docker-compose --env-file .env pull
             docker-compose --env-file .env up -d 2>&1 | tee deploy.log
             docker-compose --env-file .env ps
             cat deploy.log
+            free -h  # Проверить память после запуска
           EOF
           rm private_key.pem
