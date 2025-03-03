@@ -3,8 +3,7 @@ FROM python:3.9-alpine3.16
 # Установка зависимостей
 RUN apk add --no-cache postgresql-client curl && \
     apk add --no-cache --virtual .build-deps postgresql-dev build-base && \
-    pip install --no-cache-dir --upgrade pip && \
-
+    pip install --no-cache-dir --upgrade pip
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
