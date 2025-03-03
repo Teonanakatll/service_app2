@@ -4,7 +4,7 @@ FROM python:3.9-alpine3.16
 RUN apk add --no-cache postgresql-client curl && \
     apk add --no-cache --virtual .build-deps postgresql-dev build-base && \
     pip install --no-cache-dir --upgrade pip && \
-    python manage.py collectstatic
+
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
@@ -29,6 +29,7 @@ USER service-user
 EXPOSE 8000
 
 ENTRYPOINT ["/service/entrypoint.sh"]
+CMD ["python", "manage.py", "collectstatic"]
 CMD ["gunicorn", "service.wsgi:application", "--bind", "0.0.0.0:8000", "--log-level", "info"]
 
 
