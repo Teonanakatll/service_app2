@@ -73,8 +73,8 @@ jobs:
             curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/Dockerfile
             curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/requirements.txt
             mkdir -p service
-            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/service/entrypoint.sh
-            chmod +x service/entrypoint.sh  # Убедись, что файл в папке service/
+            curl -O https://raw.githubusercontent.com/Teonanakatll/service_app2/master/service/entrypoint.sh  # Загружаем в папку service/
+            chmod +x service/entrypoint.sh  # Устанавливаем права для файла в service/
             ls -l .env || echo ".env not found"
             ls -l docker-compose.yml || echo "docker-compose.yml not found"
             ls -l Dockerfile || echo "Dockerfile not found"
