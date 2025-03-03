@@ -87,49 +87,49 @@ services:
       retries: 3
       start_period: 30s
 
-  celery-beat:
-    build:
-      context: .
-    entrypoint: celery
-    command: -A celery_app.app beat --loglevel=info
-    env_file:
-      - .env
-    depends_on:
-      redis:
-        condition: service_healthy
-      database:
-        condition: service_healthy
-      worker:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "ps aux | grep '[c]elery beat' || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+#  celery-beat:
+#    build:
+#      context: .
+#    entrypoint: celery
+#    command: -A celery_app.app beat --loglevel=info
+#    env_file:
+#      - .env
+#    depends_on:
+#      redis:
+#        condition: service_healthy
+#      database:
+#        condition: service_healthy
+#      worker:
+#        condition: service_healthy
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD-SHELL", "ps aux | grep '[c]elery beat' || exit 1"]
+#      interval: 30s
+#      timeout: 5s
+#      retries: 3
+#      start_period: 30s
 
-  flower:
-    build:
-      context: .
-    hostname: flower
-    container_name: flower
-    entrypoint: celery
-    command: -A celery_app.app flower
-    env_file:
-      - .env
-    ports:
-      - "5555:5555"
-    depends_on:
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5555/api/workers"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+#  flower:
+#    build:
+#      context: .
+#    hostname: flower
+#    container_name: flower
+#    entrypoint: celery
+#    command: -A celery_app.app flower
+#    env_file:
+#      - .env
+#    ports:
+#      - "5555:5555"
+#    depends_on:
+#      redis:
+#        condition: service_healthy
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:5555/api/workers"]
+#      interval: 30s
+#      timeout: 5s
+#      retries: 3
+#      start_period: 30s
 
 volumes:
   db_data:
