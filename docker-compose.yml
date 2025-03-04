@@ -134,7 +134,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/flower"]
+      test: ["CMD", "curl", "-f", "http://flower:5555"]
       interval: 30s
       timeout: 5s
       retries: 3
