@@ -87,6 +87,7 @@ docker volume rm react_volume
 docker-compose --profile dev up
 > 
 > ssh -i ~/.ssh/id_rsa root@212.67.14.125
+> HuA9W&4aOwYV
 
 C:\Windows\System32\drivers\etc\hosts
 
