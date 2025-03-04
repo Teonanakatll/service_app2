@@ -122,17 +122,19 @@ services:
     hostname: flower
     container_name: flower
     entrypoint: celery
-    command: -A celery_app.app flower
+    command: -A celery_app.app flower --port=5555
     env_file:
       - .env
     ports:
       - "5555:5555"
+#    environment:
+#      - FLOWER_BASIC_AUTH=username:password  # Аутентификация (опционально)
     depends_on:
       redis:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5555/api/workers"]
+      test: ["CMD", "curl", "-f", "http://localhost/flower"]
       interval: 30s
       timeout: 5s
       retries: 3
