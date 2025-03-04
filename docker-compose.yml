@@ -14,8 +14,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    volumes:
-      - ./service:/service
     env_file:
       - .env
     depends_on:
