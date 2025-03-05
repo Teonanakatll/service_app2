@@ -88,6 +88,8 @@ docker-compose --profile dev up
 > 
 > ssh -i ~/.ssh/id_rsa root@212.67.14.125
 > HuA9W&4aOwYV
+> docker-compose -f home.yml up --build
+
 
 C:\Windows\System32\drivers\etc\hosts
 

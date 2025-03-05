@@ -15,7 +15,7 @@ services:
       retries: 3
       start_period: 10s
     volumes:
-      - static_volume:/service/static
+      - ./service:/service
     env_file:
       - .env
     depends_on:
@@ -53,6 +53,7 @@ services:
         condition: service_healthy
     volumes:
 #      - static_volume:/static
+      - flower-static:/var/www/flower/static  # Монтируем статику Flower в Nginx
       - media_volume:/media
     mem_limit: 32m  # Ограничение памяти до 32 МБ
 
@@ -122,19 +123,20 @@ services:
     hostname: flower
     container_name: flower
     entrypoint: celery
-    command: -A celery_app.app flower --port=5555
+    command: -A celery_app.app flower
+
     env_file:
       - .env
     ports:
       - "5555:5555"
-#    environment:
-#      - FLOWER_BASIC_AUTH=username:password  # Аутентификация (опционально)
+    volumes:
+      - flower-static:/usr/local/lib/python3.9/site-packages/flower/static
     depends_on:
       redis:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://flower:5555"]
+      test: ["CMD", "curl", "-f", "http://localhost:5555"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -144,3 +146,4 @@ volumes:
   db_data:
   static_volume:
   media_volume:
+  flower_static:

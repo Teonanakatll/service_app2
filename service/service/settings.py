@@ -208,13 +208,8 @@ CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 CELERY_BEAT_SCHEDULE = {
     'task_good': {
         'task': 'services.tasks.task_good',  # Полный путь к задаче
-        'schedule': timedelta(seconds=5),  # Каждые 5 секунд
+        'schedule': timedelta(seconds=50),  # Каждые 5 секунд
     },
-    'test_task': {
-        'task': 'services.tasks.test_task',  # Полный путь к задаче
-        'schedule': timedelta(seconds=5),  # Каждые 5 секунд
-    },
-
 }
 
 # устанавливаем редис кешем по умолчанию, django-cachalot использует джанго кеш, джанго кеш использует редис
