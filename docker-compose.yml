@@ -8,7 +8,7 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped
-    entrypoint: /service/entrypoint.sh
+#    entrypoint: /service/entrypoint.sh
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health/"]
       interval: 30s
@@ -54,7 +54,7 @@ services:
         condition: service_healthy
     volumes:
 #      - static_volume:/static
-      - flower_static:/flower/static  # Монтируем статику Flower в Nginx
+#      - flower_static:/flower/static  # Монтируем статику Flower в Nginx
       - media_volume:/media
     mem_limit: 32m  # Ограничение памяти до 32 МБ
 
@@ -130,8 +130,8 @@ services:
       - .env
     ports:
       - "5555:5555"
-    volumes:
-      - flower_static:/usr/local/lib/python3.9/site-packages/flower/static
+#    volumes:
+#      - flower_static:/usr/local/lib/python3.9/site-packages/flower/static
     depends_on:
       redis:
         condition: service_healthy
