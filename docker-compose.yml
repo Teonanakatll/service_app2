@@ -6,8 +6,12 @@ services:
     container_name: app
 #    command: gunicorn service.wsgi:application --bind 0.0.0.0:8000 --log-level info
     command: >
-      sh -c "python manage.py migrate --noinput &&
-             python manage.py collectstatic --noinput --clear &&
+      sh -c "until pg_isready -h database -U $${DB_USER}; do
+              echo 'Waiting for database...';
+              sleep 2;
+            done &&
+            python manage.py migrate --noinput &&
+            python manage.py collectstatic --noinput --clear &&
              gunicorn service.wsgi:application --bind 0.0.0.0:8000 --log-level info"
     ports:
       - "8000:8000"
