@@ -4,7 +4,11 @@ services:
     build:
       context: .
     container_name: app
-    command: gunicorn service.wsgi:application --bind 0.0.0.0:8000 --log-level info
+#    command: gunicorn service.wsgi:application --bind 0.0.0.0:8000 --log-level info
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput --clear &&
+             gunicorn service.wsgi:application --bind 0.0.0.0:8000 --log-level info"
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -54,7 +58,7 @@ services:
         condition: service_healthy
     volumes:
 #      - static_volume:/static
-#      - flower_static:/flower/static  # Монтируем статику Flower в Nginx
+      - flower_static:/flower/static  # Монтируем статику Flower в Nginx
       - media_volume:/media
     mem_limit: 32m  # Ограничение памяти до 32 МБ
 
@@ -130,8 +134,8 @@ services:
       - .env
     ports:
       - "5555:5555"
-#    volumes:
-#      - flower_static:/usr/local/lib/python3.9/site-packages/flower/static
+    volumes:
+      - flower_static:/usr/local/lib/python3.9/site-packages/flower/static
     depends_on:
       redis:
         condition: service_healthy

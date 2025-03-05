@@ -14,13 +14,11 @@ RUN pip install --no-cache-dir -r /temp/requirements.txt && \
     apk del .build-deps
 
 COPY service /service
-COPY service/entrypoint.sh /service/entrypoint.sh
-RUN chmod +x /service/entrypoint.sh
+#COPY service/entrypoint.sh /service/entrypoint.sh
 
 WORKDIR /service
 
-RUN chmod +x /service/entrypoint.sh && \
-    adduser --disabled-password --no-create-home service-user && \
+RUN adduser --disabled-password --no-create-home service-user && \
     mkdir -p /service/static /service/media && \
     chown -R service-user:service-user /service  # Дать права на всю директорию
 
@@ -28,7 +26,7 @@ USER service-user
 
 EXPOSE 8000
 
-ENTRYPOINT ["/service/entrypoint.sh"]
+#ENTRYPOINT ["/service/entrypoint.sh"]
 CMD ["gunicorn", "service.wsgi:application", "--bind", "0.0.0.0:8000", "--log-level", "info"]
 
 
