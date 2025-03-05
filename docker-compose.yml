@@ -53,7 +53,7 @@ services:
         condition: service_healthy
     volumes:
 #      - static_volume:/static
-      - flower-static:/var/www/flower/static  # Монтируем статику Flower в Nginx
+      - flower-static:/flower/static  # Монтируем статику Flower в Nginx
       - media_volume:/media
     mem_limit: 32m  # Ограничение памяти до 32 МБ
 
