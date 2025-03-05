@@ -21,10 +21,7 @@ WORKDIR /service
 
 RUN adduser --disabled-password --no-create-home service-user && \
     mkdir -p /service/static /service/media && \
-    chown -R service-user:service-user /service  && \
-    python manage.py makemigrations && \
-    python manage.py migrate && \
-    python manage.py collectstatic
+    chown -R service-user:service-user /service
 
 USER service-user
 
