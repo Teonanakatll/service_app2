@@ -15,6 +15,7 @@ RUN pip install --no-cache-dir -r /temp/requirements.txt && \
 
 COPY service /service
 COPY service/entrypoint.sh /service/entrypoint.sh
+RUN chmod +x /service/entrypoint.sh
 
 WORKDIR /service
 
