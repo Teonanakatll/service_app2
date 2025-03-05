@@ -53,7 +53,7 @@ services:
         condition: service_healthy
     volumes:
 #      - static_volume:/static
-      - flower-static:/flower/static  # Монтируем статику Flower в Nginx
+      - flower_static:/flower/static  # Монтируем статику Flower в Nginx
       - media_volume:/media
     mem_limit: 32m  # Ограничение памяти до 32 МБ
 
@@ -130,7 +130,7 @@ services:
     ports:
       - "5555:5555"
     volumes:
-      - flower-static:/usr/local/lib/python3.9/site-packages/flower/static
+      - flower_static:/usr/local/lib/python3.9/site-packages/flower/static
     depends_on:
       redis:
         condition: service_healthy
