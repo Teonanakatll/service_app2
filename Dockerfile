@@ -13,13 +13,6 @@ RUN pip install --no-cache-dir -r /temp/requirements.txt && \
     rm -rf /temp && \
     apk del .build-deps
 
-# Применяем миграции и собираем статику
-RUN until pg_isready -h database -U "${DB_USER}"; do \
-      echo "Waiting for database..."; \
-      sleep 2; \
-    done; \
-    python manage.py migrate --noinput; \
-    python manage.py collectstatic --noinput --clear;
 
 COPY service /service
 #COPY service/entrypoint.sh /service/entrypoint.sh
@@ -28,7 +21,10 @@ WORKDIR /service
 
 RUN adduser --disabled-password --no-create-home service-user && \
     mkdir -p /service/static /service/media && \
-    chown -R service-user:service-user /service  # Дать права на всю директорию
+    chown -R service-user:service-user /service  && \
+    python manage.py makemigrations && \
+    python manage.py migrate && \
+    python manage.py collectstatic
 
 USER service-user
 
